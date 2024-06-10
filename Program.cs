@@ -52,7 +52,7 @@ namespace GrafosApp
                         BuscaEmProfundidade(vertices, listaArestas, true);
                         break;
                     case 2:
-                        //BuscaEmLargura(vertices, listaArestas);
+                        BuscaEmLargura(vertices, listaArestas, true);
                         break;
                     case 3:
                         //AlgoritmoDeDijkstra(vertices, listaArestas);
@@ -200,11 +200,78 @@ namespace GrafosApp
             }
         }
 
-        static void BuscaEmLargura(int vertices, int arestas)
+        static void BuscaEmLargura(int vertices, List<(int, int, int)> arestas, bool direcionado)
         {
             Console.WriteLine("Executando Busca em Largura (BFS)...");
-            // Implementação do Algoritmo de Busca em Largura
+
+            // Criação do grafo como uma lista de adjacências
+            List<int>[] grafo = new List<int>[vertices];
+            for (int i = 0; i < vertices; i++)
+            {
+                grafo[i] = new List<int>();
+            }
+
+            foreach (var aresta in arestas)
+            {
+                int origem = aresta.Item1;
+                int destino = aresta.Item2;
+                grafo[origem].Add(destino);
+                if (!direcionado)
+                {
+                    grafo[destino].Add(origem);
+                }
+            }
+
+            // Array para rastrear os vértices visitados
+            bool[] visitado = new bool[vertices];
+
+            // Selecionando o primeiro vértice do grafo como vértice inicial
+            int verticeInicial = 0;
+
+            // Fila para a BFS
+            Queue<int> fila = new Queue<int>();
+            fila.Enqueue(verticeInicial);
+            visitado[verticeInicial] = true;
+
+            while (fila.Count > 0)
+            {
+                int v = fila.Dequeue();
+                Console.WriteLine($"Visitando vértice {v}");
+                foreach (int adj in grafo[v])
+                {
+                    if (!visitado[adj])
+                    {
+                        fila.Enqueue(adj);
+                        visitado[adj] = true;
+                    }
+                }
+            }
+
+            // Para garantir que todos os vértices são visitados (no caso de grafos não conectados)
+            for (int i = 0; i < vertices; i++)
+            {
+                if (!visitado[i])
+                {
+                    fila.Enqueue(i);
+                    visitado[i] = true;
+
+                    while (fila.Count > 0)
+                    {
+                        int v = fila.Dequeue();
+                        Console.WriteLine($"Visitando vértice {v}");
+                        foreach (int adj in grafo[v])
+                        {
+                            if (!visitado[adj])
+                            {
+                                fila.Enqueue(adj);
+                                visitado[adj] = true;
+                            }
+                        }
+                    }
+                }
+            }
         }
+
 
         static void AlgoritmoDeDijkstra(int vertices, int arestas)
         {
