@@ -1,25 +1,32 @@
-﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Collections.Generic;
 
-namespace GrafosApp {
-    public class Program {
+namespace GrafosApp
+{
+    public class Program
+    {
         public static string arquivo = "./Grafo.txt";
 
-        static void processarGrafo(string caminhoArquivo) {
+        static void processarGrafo(string caminhoArquivo)
+        {
 
-            try {
-                if (!File.Exists(caminhoArquivo)) {
+            try
+            {
+                if (!File.Exists(caminhoArquivo))
+                {
                     Console.WriteLine("Erro: O arquivo '{caminhoArquivo}' não foi encontrado.");
                 }
 
                 string[] grafo = File.ReadAllLines(caminhoArquivo);
 
-                if (grafo.Length == 0) {
+                if (grafo.Length == 0)
+                {
                     Console.WriteLine("Erro: O arquivo '{caminhoArquivo}' está vazio.");
                 }
                 Console.WriteLine("Seu Grafo:");
-                for(int i = 0; i < grafo.Length; i++) {
+                for (int i = 0; i < grafo.Length; i++)
+                {
                     Console.WriteLine(grafo[i]);
                 }
 
@@ -28,64 +35,81 @@ namespace GrafosApp {
                 string[] split = infos.Split(' ');
                 int vertices = int.Parse(split[0]);
                 int arestas = int.Parse(split[1]);
-                switch (opcao) {
+
+                List<(int, int, int)> listaArestas = new List<(int, int, int)>();
+                for (int i = 2; i < grafo.Length; i++)
+                {
+                    string[] arestaInfo = grafo[i].Split(' ');
+                    int origem = int.Parse(arestaInfo[0]);
+                    int destino = int.Parse(arestaInfo[1]);
+                    int peso = int.Parse(arestaInfo[2]);
+                    listaArestas.Add((origem, destino, peso));
+                }
+
+                switch (opcao)
+                {
                     case 1:
-                        BuscaEmProfundidade(vertices, arestas);
+                        BuscaEmProfundidade(vertices, listaArestas, true);
                         break;
                     case 2:
-                        BuscaEmLargura(vertices, arestas);
+                        BuscaEmLargura(vertices, listaArestas, true);
                         break;
                     case 3:
-                        AlgoritmoDeDijkstra(vertices, arestas);
+                        //AlgoritmoDeDijkstra(vertices, listaArestas);
                         break;
                     case 4:
-                        AlgoritmoDePrim(vertices, arestas);
+                        //AlgoritmoDePrim(vertices, listaArestas);
                         break;
                     case 5:
-                        OrdenacaoTopologica(vertices, arestas);
+                        //OrdenacaoTopologica(vertices, listaArestas);
                         break;
                     case 6:
-                        AlgoritmoDeKruskal(vertices, arestas);
+                        //AlgoritmoDeKruskal(vertices, listaArestas);
                         break;
                     case 7:
-                        AlgoritmoDeFleury(vertices, arestas);
+                        //AlgoritmoDeFleury(vertices, listaArestas);
                         break;
                     case 8:
-                        AlgoritmoDeKonigEgervary(vertices, arestas);
+                        //AlgoritmoDeKonigEgervary(vertices, listaArestas);
                         break;
                     case 9:
-                        AlgoritmoGulosoDeColoracao(vertices, arestas);
+                        //AlgoritmoGulosoDeColoracao(vertices, listaArestas);
                         break;
                     case 10:
-                        AlgoritmoDeWelshPowell(vertices, arestas);
+                        //AlgoritmoDeWelshPowell(vertices, listaArestas);
                         break;
                     case 11:
-                        AlgoritmoDeBrelaz(vertices, arestas);
+                        //AlgoritmoDeBrelaz(vertices, listaArestas);
                         break;
                     case 12:
-                        AlgoritmoDeKosaraju(vertices, arestas);
+                        //AlgoritmoDeKosaraju(vertices, listaArestas);
                         break;
                     case 13:
-                        AlgoritmoDeKahn(vertices, arestas);
+                        //AlgoritmoDeKahn(vertices, listaArestas);
                         break;
                     case 14:
-                        AlgoritmoDeBellmanFord(vertices, arestas);
+                        //AlgoritmoDeBellmanFord(vertices, listaArestas);
                         break;
                     case 15:
-                        AlgoritmoDeFordFulkerson(vertices, arestas);
+                        //AlgoritmoDeFordFulkerson(vertices, listaArestas);
                         break;
                     default:
                         Console.WriteLine("Opção inválida. Tente novamente.");
                         break;
                 }
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 Console.WriteLine("Ocorreu um erro ao ler o arquivo: {e.Message}");
-            } catch (UnauthorizedAccessException) {
+            }
+            catch (UnauthorizedAccessException)
+            {
                 Console.WriteLine("Erro: Sem permissão para acessar o arquivo '{caminhoArquivo}'.");
             }
         }
 
-        public static void Main(string[] args){
+        public static void Main(string[] args)
+        {
             Console.Clear();
             Console.WriteLine("--- Tabela de algoritmos ---");
             Console.WriteLine();
@@ -111,79 +135,221 @@ namespace GrafosApp {
             processarGrafo(arquivo);
 
         }
-        static void BuscaEmProfundidade(int vertices, int arestas) {
+        static void BuscaEmProfundidade(int vertices, List<(int, int, int)> arestas, bool direcionado)
+        {
             Console.WriteLine("Executando Busca em Profundidade (DFS)...");
-            // Implementação do Algoritmo de Busca em Profundidade
+
+            // Criação do grafo como uma lista de adjacências
+            List<int>[] grafo = new List<int>[vertices];
+            for (int i = 0; i < vertices; i++)
+            {
+                grafo[i] = new List<int>();
+            }
+
+            foreach (var aresta in arestas)
+            {
+                int origem = aresta.Item1;
+                int destino = aresta.Item2;
+                grafo[origem].Add(destino);
+                if (!direcionado)
+                {
+                    grafo[destino].Add(origem);
+                }
+            }
+
+            // Array para rastrear os vértices visitados
+            bool[] visitado = new bool[vertices];
+
+            // Selecionando o primeiro vértice do grafo como vértice inicial
+            int verticeInicial = 0;
+
+            DFS(verticeInicial, grafo, visitado);
+
+            // Para garantir que todos os vértices são visitados (no caso de grafos não conectados)
+            for (int i = 0; i < vertices; i++)
+            {
+                if (!visitado[i])
+                {
+                    DFS(i, grafo, visitado);
+                }
+            }
         }
 
-        static void BuscaEmLargura(int vertices, int arestas) {
+
+        static void DFS(int vertice, List<int>[] grafo, bool[] visitado)
+        {
+            // Criação de uma pilha para a DFS iterativa
+            Stack<int> pilha = new Stack<int>();
+            pilha.Push(vertice);
+
+            while (pilha.Count > 0)
+            {
+                int v = pilha.Pop();
+                if (!visitado[v])
+                {
+                    visitado[v] = true;
+                    Console.WriteLine($"Visitando vértice {v}");
+                    foreach (int adj in grafo[v])
+                    {
+                        if (!visitado[adj])
+                        {
+                            pilha.Push(adj);
+                        }
+                    }
+                }
+            }
+        }
+
+        static void BuscaEmLargura(int vertices, List<(int, int, int)> arestas, bool direcionado)
+        {
             Console.WriteLine("Executando Busca em Largura (BFS)...");
-            // Implementação do Algoritmo de Busca em Largura
+
+            // Criação do grafo como uma lista de adjacências
+            List<int>[] grafo = new List<int>[vertices];
+            for (int i = 0; i < vertices; i++)
+            {
+                grafo[i] = new List<int>();
+            }
+
+            foreach (var aresta in arestas)
+            {
+                int origem = aresta.Item1;
+                int destino = aresta.Item2;
+                grafo[origem].Add(destino);
+                if (!direcionado)
+                {
+                    grafo[destino].Add(origem);
+                }
+            }
+
+            // Array para rastrear os vértices visitados
+            bool[] visitado = new bool[vertices];
+
+            // Selecionando o primeiro vértice do grafo como vértice inicial
+            int verticeInicial = 0;
+
+            // Fila para a BFS
+            Queue<int> fila = new Queue<int>();
+            fila.Enqueue(verticeInicial);
+            visitado[verticeInicial] = true;
+
+            while (fila.Count > 0)
+            {
+                int v = fila.Dequeue();
+                Console.WriteLine($"Visitando vértice {v}");
+                foreach (int adj in grafo[v])
+                {
+                    if (!visitado[adj])
+                    {
+                        fila.Enqueue(adj);
+                        visitado[adj] = true;
+                    }
+                }
+            }
+
+            // Para garantir que todos os vértices são visitados (no caso de grafos não conectados)
+            for (int i = 0; i < vertices; i++)
+            {
+                if (!visitado[i])
+                {
+                    fila.Enqueue(i);
+                    visitado[i] = true;
+
+                    while (fila.Count > 0)
+                    {
+                        int v = fila.Dequeue();
+                        Console.WriteLine($"Visitando vértice {v}");
+                        foreach (int adj in grafo[v])
+                        {
+                            if (!visitado[adj])
+                            {
+                                fila.Enqueue(adj);
+                                visitado[adj] = true;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        static void AlgoritmoDeDijkstra(int vertices, int arestas) {
+
+        static void AlgoritmoDeDijkstra(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de Dijkstra...");
             // Implementação do Algoritmo de Dijkstra
         }
 
-        static void AlgoritmoDePrim(int vertices, int arestas) {
+        static void AlgoritmoDePrim(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de Jarník-Prim...");
             // Implementação do Algoritmo de Jarník-Prim
         }
 
-        static void OrdenacaoTopologica(int vertices, int arestas) {
+        static void OrdenacaoTopologica(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Ordenação Topológica...");
             // Implementação da Ordenação Topológica
         }
 
-        static void AlgoritmoDeKruskal(int vertices, int arestas) {
+        static void AlgoritmoDeKruskal(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de Kruskal...");
             // Implementação do Algoritmo de Kruskal
         }
 
-        static void AlgoritmoDeFleury(int vertices, int arestas) {
+        static void AlgoritmoDeFleury(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de Fleury...");
             // Implementação do Algoritmo de Fleury
         }
 
-        static void AlgoritmoDeKonigEgervary(int vertices, int arestas) {
+        static void AlgoritmoDeKonigEgervary(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de König-Egerváry...");
             // Implementação do Algoritmo de König-Egerváry
         }
 
-        static void AlgoritmoGulosoDeColoracao(int vertices, int arestas) {
+        static void AlgoritmoGulosoDeColoracao(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo Guloso de Coloração...");
             // Implementação do Algoritmo Guloso de Coloração
         }
 
-        static void AlgoritmoDeWelshPowell(int vertices, int arestas) {
+        static void AlgoritmoDeWelshPowell(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de Welsh-Powell...");
             // Implementação do Algoritmo de Welsh-Powell
         }
 
-        static void AlgoritmoDeBrelaz(int vertices, int arestas) {
+        static void AlgoritmoDeBrelaz(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de Brélaz...");
             // Implementação do Algoritmo de Brélaz
         }
 
-        static void AlgoritmoDeKosaraju(int vertices, int arestas) {
+        static void AlgoritmoDeKosaraju(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de Kosaraju...");
             // Implementação do Algoritmo de Kosaraju
         }
 
-        static void AlgoritmoDeKahn(int vertices, int arestas) {
+        static void AlgoritmoDeKahn(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de Kahn...");
             // Implementação do Algoritmo de Kahn
         }
 
-        static void AlgoritmoDeBellmanFord(int vertices, int arestas) {
+        static void AlgoritmoDeBellmanFord(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de Bellman-Ford...");
             // Implementação do Algoritmo de Bellman-Ford
         }
 
-        static void AlgoritmoDeFordFulkerson(int vertices, int arestas) {
+        static void AlgoritmoDeFordFulkerson(int vertices, int arestas)
+        {
             Console.WriteLine("Executando Algoritmo de Ford-Fulkerson...");
             // Implementação do Algoritmo de Ford-Fulkerson
         }
+
     }
 }
