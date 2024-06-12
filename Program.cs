@@ -55,7 +55,7 @@ namespace GrafosApp
                         BuscaEmLargura(vertices, listaArestas, true);
                         break;
                     case 3:
-                        //AlgoritmoDeDijkstra(vertices, listaArestas);
+                        AlgoritmoDeDijkstra(vertices, listaArestas, true);
                         break;
                     case 4:
                         //AlgoritmoDePrim(vertices, listaArestas);
@@ -273,11 +273,83 @@ namespace GrafosApp
         }
 
 
-        static void AlgoritmoDeDijkstra(int vertices, int arestas)
+        static void AlgoritmoDeDijkstra(int vertices, List<(int, int, int)> arestas, bool direcionado)
         {
             Console.WriteLine("Executando Algoritmo de Dijkstra...");
-            // Implementação do Algoritmo de Dijkstra
+
+            // Criação do grafo como uma lista de adjacências
+            Dictionary<int, Dictionary<int, int>> grafo = new Dictionary<int, Dictionary<int, int>>();
+            for (int i = 0; i < vertices; i++)
+            {
+                grafo[i] = new Dictionary<int, int>();
+            }
+
+            foreach (var aresta in arestas)
+            {
+                int origem = aresta.Item1;
+                int destino = aresta.Item2;
+                int peso = aresta.Item3;
+                grafo[origem][destino] = peso;
+                if (!direcionado)
+                {
+                    grafo[destino][origem] = peso;
+                }
+            }
+
+            // Vértice inicial para iniciar o algoritmo de Dijkstra
+            int verticeInicial = 0;
+
+            // Distâncias mínimas estimadas a partir do vértice inicial
+            Dictionary<int, int> distancia = new Dictionary<int, int>();
+            for (int i = 0; i < vertices; i++)
+            {
+                distancia[i] = int.MaxValue;
+            }
+            distancia[verticeInicial] = 0;
+
+            // Conjunto de vértices visitados
+            HashSet<int> visitados = new HashSet<int>();
+
+            // Algoritmo de Dijkstra
+            while (visitados.Count < vertices)
+            {
+                int verticeAtual = -1;
+                int menorDistancia = int.MaxValue;
+
+                // Encontra o vértice não visitado com a menor distância estimada
+                foreach (var kvp in distancia)
+                {
+                    if (!visitados.Contains(kvp.Key) && kvp.Value < menorDistancia)
+                    {
+                        verticeAtual = kvp.Key;
+                        menorDistancia = kvp.Value;
+                    }
+                }
+
+                // Marca o vértice atual como visitado
+                visitados.Add(verticeAtual);
+
+                // Atualiza as distâncias mínimas estimadas para os vértices adjacentes
+                foreach (var adjacente in grafo[verticeAtual])
+                {
+                    int vizinho = adjacente.Key;
+                    int peso = adjacente.Value;
+                    int novaDistancia = distancia[verticeAtual] + peso;
+                    if (novaDistancia < distancia[vizinho])
+                    {
+                        distancia[vizinho] = novaDistancia;
+                    }
+                }
+            }
+
+            // Imprime as distâncias mínimas estimadas a partir do vértice inicial
+            for (int i = 0; i < vertices; i++)
+            {
+                Console.WriteLine($"Distância mínima de {verticeInicial} para {i}: {distancia[i]}");
+            }
         }
+
+
 
         static void AlgoritmoDePrim(int vertices, int arestas)
         {
