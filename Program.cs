@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.IO;
 using System.Collections.Generic;
 
@@ -58,7 +58,7 @@ namespace GrafosApp
                         AlgoritmoDeDijkstra(vertices, listaArestas, true);
                         break;
                     case 4:
-                        //AlgoritmoDePrim(vertices, listaArestas);
+                        AlgoritmoDePrim(vertices, listaArestas);
                         break;
                     case 5:
                         //OrdenacaoTopologica(vertices, listaArestas);
@@ -135,6 +135,7 @@ namespace GrafosApp
             processarGrafo(arquivo);
 
         }
+
         static void BuscaEmProfundidade(int vertices, List<(int, int, int)> arestas, bool direcionado)
         {
             Console.WriteLine("Executando Busca em Profundidade (DFS)...");
@@ -174,7 +175,6 @@ namespace GrafosApp
                 }
             }
         }
-
 
         static void DFS(int vertice, List<int>[] grafo, bool[] visitado)
         {
@@ -272,7 +272,6 @@ namespace GrafosApp
             }
         }
 
-
         static void AlgoritmoDeDijkstra(int vertices, List<(int, int, int)> arestas, bool direcionado)
         {
             Console.WriteLine("Executando Algoritmo de Dijkstra...");
@@ -349,75 +348,139 @@ namespace GrafosApp
             }
         }
 
-
-
-        static void AlgoritmoDePrim(int vertices, int arestas)
+        static void AlgoritmoDePrim(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Jarník-Prim...");
-            // Implementação do Algoritmo de Jarník-Prim
+
+            // Criação do grafo como uma lista de adjacências com pesos
+            Dictionary<int, List<(int, int)>> grafo = new Dictionary<int, List<(int, int)>>();
+            for (int i = 0; i < vertices; i++)
+            {
+                grafo[i] = new List<(int, int)>();
+            }
+
+            foreach (var aresta in arestas)
+            {
+                int origem = aresta.Item1;
+                int destino = aresta.Item2;
+                int peso = aresta.Item3;
+                grafo[origem].Add((destino, peso));
+                grafo[destino].Add((origem, peso));
+            }
+
+            // Inicializações
+            bool[] visitado = new bool[vertices];
+            int[] chave = new int[vertices];
+            int[] pai = new int[vertices];
+            for (int i = 0; i < vertices; i++)
+            {
+                chave[i] = int.MaxValue;
+                pai[i] = -1;
+            }
+
+            // Começando do vértice 0
+            chave[0] = 0;
+
+            for (int i = 0; i < vertices - 1; i++)
+            {
+                int u = -1;
+                int minChave = int.MaxValue;
+
+                // Encontra o vértice não visitado com a menor chave
+                for (int v = 0; v < vertices; v++)
+                {
+                    if (!visitado[v] && chave[v] < minChave)
+                    {
+                        minChave = chave[v];
+                        u = v;
+                    }
+                }
+
+                // Marca o vértice como visitado
+                visitado[u] = true;
+
+                // Atualiza as chaves e pais dos vértices adjacentes
+                foreach (var adjacente in grafo[u])
+                {
+                    int v = adjacente.Item1;
+                    int peso = adjacente.Item2;
+                    if (!visitado[v] && peso < chave[v])
+                    {
+                        chave[v] = peso;
+                        pai[v] = u;
+                    }
+                }
+            }
+
+            // Imprime a Árvore Geradora Mínima
+            Console.WriteLine("Arestas na Árvore Geradora Mínima:");
+            for (int i = 1; i < vertices; i++)
+            {
+                Console.WriteLine($"{pai[i]} - {i} (peso {chave[i]})");
+            }
         }
 
-        static void OrdenacaoTopologica(int vertices, int arestas)
+        static void OrdenacaoTopologica(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Ordenação Topológica...");
             // Implementação da Ordenação Topológica
         }
 
-        static void AlgoritmoDeKruskal(int vertices, int arestas)
+        static void AlgoritmoDeKruskal(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Kruskal...");
             // Implementação do Algoritmo de Kruskal
         }
 
-        static void AlgoritmoDeFleury(int vertices, int arestas)
+        static void AlgoritmoDeFleury(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Fleury...");
             // Implementação do Algoritmo de Fleury
         }
 
-        static void AlgoritmoDeKonigEgervary(int vertices, int arestas)
+        static void AlgoritmoDeKonigEgervary(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de König-Egerváry...");
             // Implementação do Algoritmo de König-Egerváry
         }
 
-        static void AlgoritmoGulosoDeColoracao(int vertices, int arestas)
+        static void AlgoritmoGulosoDeColoracao(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo Guloso de Coloração...");
             // Implementação do Algoritmo Guloso de Coloração
         }
 
-        static void AlgoritmoDeWelshPowell(int vertices, int arestas)
+        static void AlgoritmoDeWelshPowell(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Welsh-Powell...");
             // Implementação do Algoritmo de Welsh-Powell
         }
 
-        static void AlgoritmoDeBrelaz(int vertices, int arestas)
+        static void AlgoritmoDeBrelaz(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Brélaz...");
             // Implementação do Algoritmo de Brélaz
         }
 
-        static void AlgoritmoDeKosaraju(int vertices, int arestas)
+        static void AlgoritmoDeKosaraju(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Kosaraju...");
             // Implementação do Algoritmo de Kosaraju
         }
 
-        static void AlgoritmoDeKahn(int vertices, int arestas)
+        static void AlgoritmoDeKahn(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Kahn...");
             // Implementação do Algoritmo de Kahn
         }
 
-        static void AlgoritmoDeBellmanFord(int vertices, int arestas)
+        static void AlgoritmoDeBellmanFord(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Bellman-Ford...");
             // Implementação do Algoritmo de Bellman-Ford
         }
 
-        static void AlgoritmoDeFordFulkerson(int vertices, int arestas)
+        static void AlgoritmoDeFordFulkerson(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Ford-Fulkerson...");
             // Implementação do Algoritmo de Ford-Fulkerson
