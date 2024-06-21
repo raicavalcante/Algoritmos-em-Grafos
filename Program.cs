@@ -64,7 +64,7 @@ namespace GrafosApp
                         OrdenacaoTopologica(vertices, listaArestas);
                         break;
                     case 6:
-                        //AlgoritmoDeKruskal(vertices, listaArestas);
+                        AlgoritmoDeKruskal(vertices, listaArestas);
                         break;
                     case 7:
                         //AlgoritmoDeFleury(vertices, listaArestas);
@@ -483,7 +483,34 @@ namespace GrafosApp
         static void AlgoritmoDeKruskal(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Kruskal...");
-            // Implementação do Algoritmo de Kruskal
+
+            // Ordena as arestas pelo peso
+            var arestasOrdenadas = arestas.OrderBy(aresta => aresta.Item3).ToList();
+
+            // Inicializa a estrutura de conjuntos disjuntos
+            var dsu = new DisjointSetUnion(vertices);
+
+            List<(int, int, int)> mst = new List<(int, int, int)>();
+
+            foreach (var aresta in arestasOrdenadas)
+            {
+                int origem = aresta.Item1;
+                int destino = aresta.Item2;
+                int peso = aresta.Item3;
+
+                if (dsu.Find(origem) != dsu.Find(destino))
+                {
+                    dsu.Union(origem, destino);
+                    mst.Add((origem, destino, peso));
+                }
+            }
+
+            // Imprime a MST
+            Console.WriteLine("Árvore Geradora Mínima (MST):");
+            foreach (var aresta in mst)
+            {
+                Console.WriteLine($"{aresta.Item1} - {aresta.Item2} (peso: {aresta.Item3})");
+            }
         }
 
         static void AlgoritmoDeFleury(int vertices, List<(int, int, int)> arestas)
@@ -540,5 +567,55 @@ namespace GrafosApp
             // Implementação do Algoritmo de Ford-Fulkerson
         }
 
+    }
+
+    // Classe para representar a estrutura de Conjuntos Disjuntos
+    class DisjointSetUnion
+    {
+        private int[] pai;
+        private int[] rank;
+
+        public DisjointSetUnion(int n)
+        {
+            pai = new int[n];
+            rank = new int[n];
+            for (int i = 0; i < n; i++)
+            {
+                pai[i] = i;
+                rank[i] = 0;
+            }
+        }
+
+        public int Find(int u)
+        {
+            if (pai[u] != u)
+            {
+                pai[u] = Find(pai[u]);
+            }
+            return pai[u];
+        }
+
+        public void Union(int u, int v)
+        {
+            int raizU = Find(u);
+            int raizV = Find(v);
+
+            if (raizU != raizV)
+            {
+                if (rank[raizU] < rank[raizV])
+                {
+                    pai[raizU] = raizV;
+                }
+                else if (rank[raizU] > rank[raizV])
+                {
+                    pai[raizV] = raizU;
+                }
+                else
+                {
+                    pai[raizV] = raizU;
+                    rank[raizU]++;
+                }
+            }
+        }
     }
 }
