@@ -352,8 +352,8 @@ namespace GrafosApp
         {
             Console.WriteLine("Executando Algoritmo de Jarník-Prim...");
 
-            // Criação do grafo como uma lista de adjacências com pesos
-            Dictionary<int, List<(int, int)>> grafo = new Dictionary<int, List<(int, int)>>();
+            // Criação do grafo como uma lista de adjacências
+            List<(int, int)>[] grafo = new List<(int, int)>[vertices];
             for (int i = 0; i < vertices; i++)
             {
                 grafo[i] = new List<(int, int)>();
@@ -368,55 +368,50 @@ namespace GrafosApp
                 grafo[destino].Add((origem, peso));
             }
 
-            // Inicializações
-            bool[] visitado = new bool[vertices];
+            // Array para rastrear se o vértice foi incluído na MST
+            bool[] naMST = new bool[vertices];
+
+            // Array para armazenar o valor mínimo de chave para cada vértice
             int[] chave = new int[vertices];
-            int[] pai = new int[vertices];
             for (int i = 0; i < vertices; i++)
             {
                 chave[i] = int.MaxValue;
-                pai[i] = -1;
             }
 
-            // Começando do vértice 0
+            // Array para armazenar o pai de cada vértice na MST
+            int[] pai = new int[vertices];
+            pai[0] = -1; // O primeiro vértice é sempre a raiz da MST
             chave[0] = 0;
 
-            for (int i = 0; i < vertices - 1; i++)
+            // Min-heap ou prioridade para obter o vértice com a menor chave
+            SortedSet<(int, int)> prioridade = new SortedSet<(int, int)>();
+            prioridade.Add((0, 0)); // (chave, vértice)
+
+            while (prioridade.Count > 0)
             {
-                int u = -1;
-                int minChave = int.MaxValue;
+                int u = prioridade.Min.Item2;
+                prioridade.Remove(prioridade.Min);
+                naMST[u] = true;
 
-                // Encontra o vértice não visitado com a menor chave
-                for (int v = 0; v < vertices; v++)
+                foreach (var vizinho in grafo[u])
                 {
-                    if (!visitado[v] && chave[v] < minChave)
-                    {
-                        minChave = chave[v];
-                        u = v;
-                    }
-                }
+                    int v = vizinho.Item1;
+                    int peso = vizinho.Item2;
 
-                // Marca o vértice como visitado
-                visitado[u] = true;
-
-                // Atualiza as chaves e pais dos vértices adjacentes
-                foreach (var adjacente in grafo[u])
-                {
-                    int v = adjacente.Item1;
-                    int peso = adjacente.Item2;
-                    if (!visitado[v] && peso < chave[v])
+                    if (!naMST[v] && peso < chave[v])
                     {
+                        prioridade.Remove((chave[v], v));
                         chave[v] = peso;
+                        prioridade.Add((chave[v], v));
                         pai[v] = u;
                     }
                 }
             }
 
-            // Imprime a Árvore Geradora Mínima
-            Console.WriteLine("Arestas na Árvore Geradora Mínima:");
+            // Imprime as arestas da MST
             for (int i = 1; i < vertices; i++)
             {
-                Console.WriteLine($"{pai[i]} - {i} (peso {chave[i]})");
+                Console.WriteLine($"Aresta: {pai[i]} - {i} Peso: {chave[i]}");
             }
         }
 
