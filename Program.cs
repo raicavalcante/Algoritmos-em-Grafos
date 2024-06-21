@@ -61,7 +61,7 @@ namespace GrafosApp
                         AlgoritmoDePrim(vertices, listaArestas);
                         break;
                     case 5:
-                        //OrdenacaoTopologica(vertices, listaArestas);
+                        OrdenacaoTopologica(vertices, listaArestas);
                         break;
                     case 6:
                         //AlgoritmoDeKruskal(vertices, listaArestas);
@@ -418,7 +418,66 @@ namespace GrafosApp
         static void OrdenacaoTopologica(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Ordenação Topológica...");
-            // Implementação da Ordenação Topológica
+
+            // Criação do grafo como uma lista de adjacências
+            List<int>[] grafo = new List<int>[vertices];
+            for (int i = 0; i < vertices; i++)
+            {
+                grafo[i] = new List<int>();
+            }
+
+            // Array para armazenar o grau de entrada de cada vértice
+            int[] grauDeEntrada = new int[vertices];
+
+            foreach (var aresta in arestas)
+            {
+                int origem = aresta.Item1;
+                int destino = aresta.Item2;
+                grafo[origem].Add(destino);
+                grauDeEntrada[destino]++;
+            }
+
+            // Fila para armazenar os vértices com grau de entrada zero
+            Queue<int> fila = new Queue<int>();
+
+            for (int i = 0; i < vertices; i++)
+            {
+                if (grauDeEntrada[i] == 0)
+                {
+                    fila.Enqueue(i);
+                }
+            }
+
+            List<int> ordenacao = new List<int>();
+
+            while (fila.Count > 0)
+            {
+                int vertice = fila.Dequeue();
+                ordenacao.Add(vertice);
+
+                foreach (var adjacente in grafo[vertice])
+                {
+                    grauDeEntrada[adjacente]--;
+                    if (grauDeEntrada[adjacente] == 0)
+                    {
+                        fila.Enqueue(adjacente);
+                    }
+                }
+            }
+
+            if (ordenacao.Count != vertices)
+            {
+                Console.WriteLine("O grafo contém um ciclo e, portanto, não pode ser ordenado topologicamente.");
+            }
+            else
+            {
+                Console.WriteLine("Ordenação Topológica:");
+                foreach (var vertice in ordenacao)
+                {
+                    Console.Write($"{vertice} ");
+                }
+                Console.WriteLine();
+            }
         }
 
         static void AlgoritmoDeKruskal(int vertices, List<(int, int, int)> arestas)
