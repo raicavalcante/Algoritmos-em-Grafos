@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.IO;
 using System.Collections.Generic;
 
@@ -67,13 +67,13 @@ namespace GrafosApp
                         AlgoritmoDeKruskal(vertices, listaArestas);
                         break;
                     case 7:
-                        //AlgoritmoDeFleury(vertices, listaArestas);
+                        AlgoritmoDeFleury(vertices, listaArestas);
                         break;
                     case 8:
-                        //AlgoritmoDeKonigEgervary(vertices, listaArestas);
+                        AlgoritmoDeKonigEgervary(vertices, listaArestas);
                         break;
                     case 9:
-                        //AlgoritmoGulosoDeColoracao(vertices, listaArestas);
+                        AlgoritmoGulosoDeColoracao(vertices, listaArestas);
                         break;
                     case 10:
                         AlgoritmoDeWelshPowell(vertices, listaArestas);
@@ -517,19 +517,290 @@ namespace GrafosApp
         static void AlgoritmoDeFleury(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Fleury...");
-            // Implementação do Algoritmo de Fleury
+
+            // Criação do grafo como uma lista de adjacências
+            List<int>[] grafo = new List<int>[vertices];
+            for (int i = 0; i < vertices; i++)
+            {
+                grafo[i] = new List<int>();
+            }
+
+            foreach (var aresta in arestas)
+            {
+                int origem = aresta.Item1;
+                int destino = aresta.Item2;
+
+                if (origem < vertices && destino < vertices) // Verificação de limite
+                {
+                    grafo[origem].Add(destino);
+                    grafo[destino].Add(origem);
+                }
+                else
+                {
+                    Console.WriteLine("Aresta fora dos limites do grafo: ({0}, {1})", origem, destino);
+                }
+            }
+
+            List<int> circuito = new List<int>();
+            Fleury(0, grafo, circuito);
+
+            Console.WriteLine("Circuito Euleriano:");
+            foreach (var vertice in circuito)
+            {
+                Console.Write($"{vertice} ");
+            }
+            Console.WriteLine();
+        }
+
+        static void Fleury(int vertice, List<int>[] grafo, List<int> circuito)
+        {
+            for (int i = 0; i < grafo[vertice].Count; i++)
+            {
+                int adj = grafo[vertice][i];
+
+                // Verifica se a aresta é uma ponte
+                if (adj != -1 && !IsBridge(vertice, adj, grafo))
+                {
+                    Console.WriteLine($"Removendo aresta {vertice} - {adj}");
+                    RemoveAresta(vertice, adj, grafo);
+                    Fleury(adj, grafo, circuito);
+                }
+            }
+            circuito.Add(vertice);
+        }
+
+        static void RemoveAresta(int u, int v, List<int>[] grafo)
+        {
+            grafo[u].Remove(v);
+            grafo[v].Remove(u);
+        }
+
+        static bool IsBridge(int u, int v, List<int>[] grafo)
+        {
+            int count1 = DFSCount(u, grafo);
+
+            RemoveAresta(u, v, grafo);
+
+            int count2 = DFSCount(u, grafo);
+
+            AddAresta(u, v, grafo);
+
+            return count1 > count2;
+        }
+
+        static void AddAresta(int u, int v, List<int>[] grafo)
+        {
+            grafo[u].Add(v);
+            grafo[v].Add(u);
+        }
+
+        static int DFSCount(int v, List<int>[] grafo)
+        {
+            bool[] visitado = new bool[grafo.Length];
+            Stack<int> pilha = new Stack<int>();
+            pilha.Push(v);
+            visitado[v] = true;
+            int count = 1;
+
+            while (pilha.Count > 0)
+            {
+                int vertice = pilha.Pop();
+
+                foreach (int adj in grafo[vertice])
+                {
+                    if (!visitado[adj])
+                    {
+                        pilha.Push(adj);
+                        visitado[adj] = true;
+                        count++;
+                    }
+                }
+            }
+
+            return count;
         }
 
         static void AlgoritmoDeKonigEgervary(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de König-Egerváry...");
-            // Implementação do Algoritmo de König-Egerváry
+
+            // Separando as duas partições do grafo bipartido
+            int[] U = new int[vertices / 2];
+            int[] V = new int[vertices - vertices / 2];
+            for (int i = 0; i < U.Length; i++)
+                U[i] = i;
+            for (int i = 0; i < V.Length; i++)
+                V[i] = i + U.Length;
+
+            // Criação do grafo bipartido
+            Dictionary<int, List<int>> grafo = new Dictionary<int, List<int>>();
+            foreach (var u in U)
+                grafo[u] = new List<int>();
+            foreach (var v in V)
+                grafo[v] = new List<int>(); // Adiciona os vértices da partição V também
+
+            foreach (var aresta in arestas)
+            {
+                int origem = aresta.Item1;
+                int destino = aresta.Item2;
+                grafo[origem].Add(destino);
+            }
+
+            // Inicialização do emparelhamento
+            Dictionary<int, int> parU = new Dictionary<int, int>();
+            Dictionary<int, int> parV = new Dictionary<int, int>();
+            foreach (var u in U)
+                parU[u] = -1;
+            foreach (var v in V)
+                parV[v] = -1;
+
+            // Função de BFS para encontrar caminhos aumentantes
+            bool BFS(Dictionary<int, int> parU, Dictionary<int, int> parV, Dictionary<int, List<int>> grafo, Dictionary<int, int> dist)
+            {
+                Queue<int> fila = new Queue<int>();
+                foreach (var u in U)
+                {
+                    if (parU[u] == -1)
+                    {
+                        dist[u] = 0;
+                        fila.Enqueue(u);
+                    }
+                    else
+                    {
+                        dist[u] = int.MaxValue; // Inicializa a distância para todos os vértices
+                    }
+                }
+
+                // Inicializa a distância para vértices em V
+                foreach (var v in V)
+                {
+                    dist[v] = int.MaxValue;
+                }
+
+                dist[-1] = int.MaxValue;
+                while (fila.Count > 0)
+                {
+                    int u = fila.Dequeue();
+                    if (dist[u] < dist[-1])
+                    {
+                        foreach (var v in grafo[u])
+                        {
+                            if (dist[parV[v]] == int.MaxValue)
+                            {
+                                dist[parV[v]] = dist[u] + 1;
+                                fila.Enqueue(parV[v]);
+                            }
+                        }
+                    }
+                }
+                return dist[-1] != int.MaxValue;
+            }
+
+
+            // Função de DFS para encontrar e aumentar emparelhamentos
+            bool DFS(int u, Dictionary<int, int> parU, Dictionary<int, int> parV, Dictionary<int, List<int>> grafo, Dictionary<int, int> dist)
+            {
+                if (u != -1)
+                {
+                    foreach (var v in grafo[u])
+                    {
+                        if (dist[parV[v]] == dist[u] + 1)
+                        {
+                            if (DFS(parV[v], parU, parV, grafo, dist))
+                            {
+                                parV[v] = u;
+                                parU[u] = v;
+                                return true;
+                            }
+                        }
+                    }
+                    dist[u] = int.MaxValue;
+                    return false;
+                }
+                return true;
+            }
+
+            // Algoritmo de Hopcroft-Karp para encontrar o emparelhamento máximo
+            int hopcroftKarp(Dictionary<int, int> parU, Dictionary<int, int> parV, Dictionary<int, List<int>> grafo)
+            {
+                int emparelhamento = 0;
+                Dictionary<int, int> dist = new Dictionary<int, int>();
+                while (BFS(parU, parV, grafo, dist))
+                {
+                    foreach (var u in U)
+                    {
+                        if (parU[u] == -1)
+                        {
+                            if (DFS(u, parU, parV, grafo, dist))
+                            {
+                                emparelhamento++;
+                            }
+                        }
+                    }
+                }
+                return emparelhamento;
+            }
+
+            int maxEmparelhamento = hopcroftKarp(parU, parV, grafo);
+            Console.WriteLine($"O tamanho do emparelhamento máximo é: {maxEmparelhamento}");
+
+            Console.WriteLine("Emparelhamento máximo:");
+            foreach (var u in U)
+            {
+                if (parU[u] != -1)
+                {
+                    Console.WriteLine($"{u} - {parU[u]}");
+                }
+            }
         }
 
-        static void AlgoritmoGulosoDeColoracao(int vertices, List<(int, int, int)> arestas)
+        public static void AlgoritmoGulosoDeColoracao(int vertices, List<(int, int, int)> listaArestas)
         {
-            Console.WriteLine("Executando Algoritmo Guloso de Coloração...");
-            // Implementação do Algoritmo Guloso de Coloração
+            Dictionary<int, int> cores = new Dictionary<int, int>();
+
+            for (int v = 0; v < vertices; v++)
+            {
+                // Lista de cores usadas pelos vizinhos
+                List<int> coresVizinhos = new List<int>();
+
+                // Percorre todas as arestas
+                foreach (var aresta in listaArestas)
+                {
+                    int origem = aresta.Item1;
+                    int destino = aresta.Item2;
+
+                    // Verifica se o vértice atual é a origem ou o destino da aresta
+                    if (origem == v || destino == v)
+                    {
+                        // Se o vértice oposto já tiver uma cor atribuída, adiciona essa cor à lista de cores dos vizinhos
+                        if (cores.ContainsKey(origem) && origem != v)
+                        {
+                            coresVizinhos.Add(cores[origem]);
+                        }
+                        if (cores.ContainsKey(destino) && destino != v)
+                        {
+                            coresVizinhos.Add(cores[destino]);
+                        }
+                    }
+                }
+
+                // Escolhe a menor cor disponível para o vértice
+                int cor = 0;
+                while (coresVizinhos.Contains(cor))
+                {
+                    cor++;
+                }
+
+                // Atribui a cor ao vértice
+                cores[v] = cor;
+            }
+
+            // Exibe a coloração
+            Console.WriteLine("\nColoração dos vértices:");
+            foreach (var vertice in cores)
+            {
+                Console.WriteLine($"Vértice {vertice.Key} --> Cor {vertice.Value}");
+            }
         }
 
         static void AlgoritmoDeWelshPowell(int vertices, List<(int, int, int)> arestas)
