@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.IO;
 using System.Collections.Generic;
 
@@ -91,7 +91,7 @@ namespace GrafosApp
                         //AlgoritmoDeBellmanFord(vertices, listaArestas);
                         break;
                     case 15:
-                        //AlgoritmoDeFordFulkerson(vertices, listaArestas);
+                        AlgoritmoDeFordFulkerson(vertices, listaArestas);
                         break;
                     default:
                         Console.WriteLine("Opção inválida. Tente novamente.");
@@ -133,7 +133,6 @@ namespace GrafosApp
             Console.ReadKey();
             Console.Clear();
             processarGrafo(arquivo);
-
         }
 
         static void BuscaEmProfundidade(int vertices, List<(int, int, int)> arestas, bool direcionado)
@@ -832,10 +831,73 @@ namespace GrafosApp
             // Implementação do Algoritmo de Bellman-Ford
         }
 
-        static void AlgoritmoDeFordFulkerson(int vertices, List<(int, int, int)> arestas)
+         static void AlgoritmoDeFordFulkerson(int vertices, List<(int, int, int)> arestas)
         {
             Console.WriteLine("Executando Algoritmo de Ford-Fulkerson...");
-            // Implementação do Algoritmo de Ford-Fulkerson
+
+            // Criação do grafo residual como uma matriz de adjacências
+            int[,] grafoResidual = new int[vertices, vertices];
+
+            foreach (var aresta in arestas)
+            {
+                int origem = aresta.Item1;
+                int destino = aresta.Item2;
+                int capacidade = aresta.Item3;
+                grafoResidual[origem, destino] = capacidade;
+            }
+
+            int source = 0; // Vértice de origem
+            int sink = vertices - 1; // Vértice de destino
+
+            // Algoritmo de Ford-Fulkerson usando DFS para encontrar caminhos aumentantes
+            int fluxoMaximo = 0;
+            int[] pai = new int[vertices];
+            while (DFS(source, sink, pai, grafoResidual, vertices))
+            {
+                int fluxoCaminho = int.MaxValue;
+                for (int v = sink; v != source; v = pai[v])
+                {
+                    int u = pai[v];
+                    fluxoCaminho = Math.Min(fluxoCaminho, grafoResidual[u, v]);
+                }
+
+                for (int v = sink; v != source; v = pai[v])
+                {
+                    int u = pai[v];
+                    grafoResidual[u, v] -= fluxoCaminho;
+                    grafoResidual[v, u] += fluxoCaminho;
+                }
+
+                fluxoMaximo += fluxoCaminho;
+            }
+
+            Console.WriteLine($"Fluxo máximo: {fluxoMaximo}");
+        }
+
+        static bool DFS(int source, int sink, int[] pai, int[,] grafoResidual, int vertices)
+        {
+            bool[] visitado = new bool[vertices];
+            Stack<int> pilha = new Stack<int>();
+            pilha.Push(source);
+            visitado[source] = true;
+            pai[source] = -1;
+
+            while (pilha.Count > 0)
+            {
+                int u = pilha.Pop();
+
+                for (int v = 0; v < vertices; v++)
+                {
+                    if (!visitado[v] && grafoResidual[u, v] > 0)
+                    {
+                        pilha.Push(v);
+                        pai[v] = u;
+                        visitado[v] = true;
+                    }
+                }
+            }
+
+            return visitado[sink];
         }
 
     }
