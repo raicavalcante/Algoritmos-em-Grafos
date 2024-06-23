@@ -24,6 +24,7 @@ namespace GrafosApp
                 {
                     Console.WriteLine("Erro: O arquivo '{caminhoArquivo}' está vazio.");
                 }
+
                 Console.WriteLine("Seu Grafo:");
                 for (int i = 0; i < grafo.Length; i++)
                 {
@@ -32,9 +33,12 @@ namespace GrafosApp
 
                 int opcao = int.Parse(grafo[0]);
                 string infos = grafo[1];
+                string infos2 = grafo[2];
                 string[] split = infos.Split(' ');
+                string[] split2 = infos2.Split(' ');
                 int vertices = int.Parse(split[0]);
                 int arestas = int.Parse(split[1]);
+                int verticeInicial = int.Parse(split2[0]);
 
                 List<(int, int, int)> listaArestas = new List<(int, int, int)>();
                 for (int i = 2; i < grafo.Length; i++)
@@ -49,16 +53,16 @@ namespace GrafosApp
                 switch (opcao)
                 {
                     case 1:
-                        BuscaEmProfundidade(vertices, listaArestas, true);
+                        BuscaEmProfundidade(vertices, listaArestas, verticeInicial);
                         break;
                     case 2:
-                        BuscaEmLargura(vertices, listaArestas, true);
+                        BuscaEmLargura(vertices, listaArestas, verticeInicial);
                         break;
                     case 3:
-                        AlgoritmoDeDijkstra(vertices, listaArestas, true);
+                        AlgoritmoDeDijkstra(vertices, listaArestas, verticeInicial);
                         break;
                     case 4:
-                        AlgoritmoDePrim(vertices, listaArestas);
+                        AlgoritmoDePrim(vertices, listaArestas, verticeInicial);
                         break;
                     case 5:
                         OrdenacaoTopologica(vertices, listaArestas);
@@ -88,11 +92,10 @@ namespace GrafosApp
                         AlgoritmoDeKahn(vertices, listaArestas);
                         break;
                     case 14:
-                        int origem = 0;
-                        AlgoritmoDeBellmanFord(vertices, listaArestas, origem);
+                        AlgoritmoDeBellmanFord(vertices, listaArestas, verticeInicial);
                         break;
                     case 15:
-                        AlgoritmoDeFordFulkerson(vertices, listaArestas);
+                        AlgoritmoDeFordFulkerson(vertices, listaArestas, verticeInicial);
                         break;
                     default:
                         Console.WriteLine("Opção inválida. Tente novamente.");
@@ -136,143 +139,107 @@ namespace GrafosApp
             processarGrafo(arquivo);
         }
 
-        static void BuscaEmProfundidade(int vertices, List<(int, int, int)> arestas, bool direcionado)
+        static void BuscaEmProfundidade(int vertices, List<(int, int, int)> arestas, int verticeInicial)
         {
-            Console.WriteLine("Executando Busca em Profundidade (DFS)...");
-
-            // Criação do grafo como uma lista de adjacências
-            List<int>[] grafo = new List<int>[vertices];
+            Console.WriteLine("Executando Busca em profundidade...");
+            // Criando uma lista de adjacência
+            List<int>[] adjList = new List<int>[vertices];
             for (int i = 0; i < vertices; i++)
             {
-                grafo[i] = new List<int>();
+                adjList[i] = new List<int>();
             }
 
+            // Preenchendo a lista de adjacência com as arestas direcionadas
             foreach (var aresta in arestas)
             {
-                int origem = aresta.Item1;
-                int destino = aresta.Item2;
-                grafo[origem].Add(destino);
-                if (!direcionado)
-                {
-                    grafo[destino].Add(origem);
-                }
+                adjList[aresta.Item1].Add(aresta.Item2);
             }
 
-            // Array para rastrear os vértices visitados
-            bool[] visitado = new bool[vertices];
+            // Criando um array para marcar os vértices visitados
+            bool[] visitados = new bool[vertices];
 
-            // Selecionando o primeiro vértice do grafo como vértice inicial
-            int verticeInicial = 0;
+            // Lista para armazenar a ordem de visita
+            List<int> ordemDeVisita = new List<int>();
 
-            DFS(verticeInicial, grafo, visitado);
-
-            // Para garantir que todos os vértices são visitados (no caso de grafos não conectados)
-            for (int i = 0; i < vertices; i++)
+            // Função auxiliar para realizar a DFS
+            void DFS(int vertice)
             {
-                if (!visitado[i])
-                {
-                    DFS(i, grafo, visitado);
-                }
-            }
-        }
+                visitados[vertice] = true;
+                ordemDeVisita.Add(vertice);
 
-        static void DFS(int vertice, List<int>[] grafo, bool[] visitado)
-        {
-            // Criação de uma pilha para a DFS iterativa
-            Stack<int> pilha = new Stack<int>();
-            pilha.Push(vertice);
-
-            while (pilha.Count > 0)
-            {
-                int v = pilha.Pop();
-                if (!visitado[v])
+                foreach (var vizinho in adjList[vertice])
                 {
-                    visitado[v] = true;
-                    Console.WriteLine($"Visitando vértice {v}");
-                    foreach (int adj in grafo[v])
+                    if (!visitados[vizinho])
                     {
-                        if (!visitado[adj])
-                        {
-                            pilha.Push(adj);
-                        }
+                        DFS(vizinho);
                     }
                 }
             }
+
+            // Chamando a DFS a partir do vértice inicial
+            DFS(verticeInicial);
+
+            // Imprimindo a ordem de visita
+            Console.WriteLine("Ordem de Visita:");
+            foreach (var vertice in ordemDeVisita)
+            {
+                Console.Write(vertice + " ");
+            }
         }
 
-        static void BuscaEmLargura(int vertices, List<(int, int, int)> arestas, bool direcionado)
+        static void BuscaEmLargura(int vertices, List<(int, int, int)> arestas, int verticeInicial)
         {
-            Console.WriteLine("Executando Busca em Largura (BFS)...");
-
-            // Criação do grafo como uma lista de adjacências
-            List<int>[] grafo = new List<int>[vertices];
+            Console.WriteLine("Executando Busca em largura...");
+            // Criando uma lista de adjacência
+            List<int>[] adjList = new List<int>[vertices];
             for (int i = 0; i < vertices; i++)
             {
-                grafo[i] = new List<int>();
+                adjList[i] = new List<int>();
             }
 
+            // Preenchendo a lista de adjacência com as arestas direcionadas
             foreach (var aresta in arestas)
             {
-                int origem = aresta.Item1;
-                int destino = aresta.Item2;
-                grafo[origem].Add(destino);
-                if (!direcionado)
-                {
-                    grafo[destino].Add(origem);
-                }
+                adjList[aresta.Item1].Add(aresta.Item2);
             }
 
-            // Array para rastrear os vértices visitados
-            bool[] visitado = new bool[vertices];
+            // Criando um array para marcar os vértices visitados
+            bool[] visitados = new bool[vertices];
 
-            // Selecionando o primeiro vértice do grafo como vértice inicial
-            int verticeInicial = 0;
+            // Lista para armazenar a ordem de visita
+            List<int> ordemDeVisita = new List<int>();
 
-            // Fila para a BFS
+            // Fila para gerenciar a BFS
             Queue<int> fila = new Queue<int>();
+
+            // Iniciando a BFS a partir do vértice inicial
+            visitados[verticeInicial] = true;
             fila.Enqueue(verticeInicial);
-            visitado[verticeInicial] = true;
 
             while (fila.Count > 0)
             {
-                int v = fila.Dequeue();
-                Console.WriteLine($"Visitando vértice {v}");
-                foreach (int adj in grafo[v])
+                int vertice = fila.Dequeue();
+                ordemDeVisita.Add(vertice);
+
+                foreach (var vizinho in adjList[vertice])
                 {
-                    if (!visitado[adj])
+                    if (!visitados[vizinho])
                     {
-                        fila.Enqueue(adj);
-                        visitado[adj] = true;
+                        visitados[vizinho] = true;
+                        fila.Enqueue(vizinho);
                     }
                 }
             }
 
-            // Para garantir que todos os vértices são visitados (no caso de grafos não conectados)
-            for (int i = 0; i < vertices; i++)
+            // Imprimindo a ordem de visita
+            Console.WriteLine("Ordem de Visita:");
+            foreach (var vertice in ordemDeVisita)
             {
-                if (!visitado[i])
-                {
-                    fila.Enqueue(i);
-                    visitado[i] = true;
-
-                    while (fila.Count > 0)
-                    {
-                        int v = fila.Dequeue();
-                        Console.WriteLine($"Visitando vértice {v}");
-                        foreach (int adj in grafo[v])
-                        {
-                            if (!visitado[adj])
-                            {
-                                fila.Enqueue(adj);
-                                visitado[adj] = true;
-                            }
-                        }
-                    }
-                }
+                Console.Write(vertice + " ");
             }
         }
 
-        static void AlgoritmoDeDijkstra(int vertices, List<(int, int, int)> arestas, bool direcionado)
+        static void AlgoritmoDeDijkstra(int vertices, List<(int, int, int)> arestas, int verticeInicial)
         {
             Console.WriteLine("Executando Algoritmo de Dijkstra...");
 
@@ -289,14 +256,7 @@ namespace GrafosApp
                 int destino = aresta.Item2;
                 int peso = aresta.Item3;
                 grafo[origem][destino] = peso;
-                if (!direcionado)
-                {
-                    grafo[destino][origem] = peso;
-                }
             }
-
-            // Vértice inicial para iniciar o algoritmo de Dijkstra
-            int verticeInicial = 0;
 
             // Distâncias mínimas estimadas a partir do vértice inicial
             Dictionary<int, int> distancia = new Dictionary<int, int>();
@@ -348,7 +308,7 @@ namespace GrafosApp
             }
         }
 
-        static void AlgoritmoDePrim(int vertices, List<(int, int, int)> arestas)
+        static void AlgoritmoDePrim(int vertices, List<(int, int, int)> arestas, int verticeInicial)
         {
             Console.WriteLine("Executando Algoritmo de Jarník-Prim...");
 
@@ -380,12 +340,12 @@ namespace GrafosApp
 
             // Array para armazenar o pai de cada vértice na MST
             int[] pai = new int[vertices];
-            pai[0] = -1; // O primeiro vértice é sempre a raiz da MST
-            chave[0] = 0;
+            pai[verticeInicial] = -1; // O primeiro vértice é sempre a raiz da MST
+            chave[verticeInicial] = 0;
 
             // Min-heap ou prioridade para obter o vértice com a menor chave
             SortedSet<(int, int)> prioridade = new SortedSet<(int, int)>();
-            prioridade.Add((0, 0)); // (chave, vértice)
+            prioridade.Add((0, verticeInicial)); // (chave, vértice)
 
             while (prioridade.Count > 0)
             {
@@ -623,138 +583,75 @@ namespace GrafosApp
         {
             Console.WriteLine("Executando Algoritmo de König-Egerváry...");
 
-            // Separando as duas partições do grafo bipartido
-            int[] U = new int[vertices / 2];
-            int[] V = new int[vertices - vertices / 2];
-            for (int i = 0; i < U.Length; i++)
-                U[i] = i;
-            for (int i = 0; i < V.Length; i++)
-                V[i] = i + U.Length;
-
-            // Criação do grafo bipartido
+            // Criação do grafo não direcionado
             Dictionary<int, List<int>> grafo = new Dictionary<int, List<int>>();
-            foreach (var u in U)
-                grafo[u] = new List<int>();
-            foreach (var v in V)
-                grafo[v] = new List<int>(); // Adiciona os vértices da partição V também
+            for (int i = 0; i < vertices; i++)
+            {
+                grafo[i] = new List<int>();
+            }
 
+            // Preenchendo o grafo com as arestas
             foreach (var aresta in arestas)
             {
-                int origem = aresta.Item1;
-                int destino = aresta.Item2;
-                grafo[origem].Add(destino);
+                int u = aresta.Item1;
+                int v = aresta.Item2;
+                grafo[u].Add(v);
+                grafo[v].Add(u); // O grafo é não direcionado, então adicionamos as arestas nos dois sentidos
             }
 
-            // Inicialização do emparelhamento
-            Dictionary<int, int> parU = new Dictionary<int, int>();
-            Dictionary<int, int> parV = new Dictionary<int, int>();
-            foreach (var u in U)
-                parU[u] = -1;
-            foreach (var v in V)
-                parV[v] = -1;
+            // Arrays para o emparelhamento e a cobertura mínima
+            int[] emparelhamento = new int[vertices];
+            int[] coberturaMinima = new int[vertices];
+            Array.Fill(emparelhamento, -1); // Inicializa com -1 indicando que nenhum vértice está emparelhado
 
-            // Função de BFS para encontrar caminhos aumentantes
-            bool BFS(Dictionary<int, int> parU, Dictionary<int, int> parV, Dictionary<int, List<int>> grafo, Dictionary<int, int> dist)
+            // Função para encontrar o caminho aumentante usando DFS
+            bool EncontrarCaminhoAumentante(int u, bool[] visitado)
             {
-                Queue<int> fila = new Queue<int>();
-                foreach (var u in U)
+                foreach (int v in grafo[u])
                 {
-                    if (parU[u] == -1)
+                    // Se o vértice v não foi visitado ainda
+                    if (!visitado[v])
                     {
-                        dist[u] = 0;
-                        fila.Enqueue(u);
-                    }
-                    else
-                    {
-                        dist[u] = int.MaxValue; // Inicializa a distância para todos os vértices
-                    }
-                }
+                        visitado[v] = true;
 
-                // Inicializa a distância para vértices em V
-                foreach (var v in V)
-                {
-                    dist[v] = int.MaxValue;
-                }
-
-                dist[-1] = int.MaxValue;
-                while (fila.Count > 0)
-                {
-                    int u = fila.Dequeue();
-                    if (dist[u] < dist[-1])
-                    {
-                        foreach (var v in grafo[u])
+                        // Se v não está emparelhado ou se encontramos um caminho aumentante para o parceiro de v
+                        if (emparelhamento[v] == -1 || EncontrarCaminhoAumentante(emparelhamento[v], visitado))
                         {
-                            if (dist[parV[v]] == int.MaxValue)
-                            {
-                                dist[parV[v]] = dist[u] + 1;
-                                fila.Enqueue(parV[v]);
-                            }
+                            emparelhamento[v] = u;
+                            return true;
                         }
                     }
                 }
-                return dist[-1] != int.MaxValue;
+                return false;
             }
 
-
-            // Função de DFS para encontrar e aumentar emparelhamentos
-            bool DFS(int u, Dictionary<int, int> parU, Dictionary<int, int> parV, Dictionary<int, List<int>> grafo, Dictionary<int, int> dist)
+            // Algoritmo principal de König-Egerváry
+            int tamanhoEmparelhamentoMaximo = 0;
+            for (int u = 0; u < vertices; u++)
             {
-                if (u != -1)
+                // Array para marcar os vértices visitados em cada DFS
+                bool[] visitado = new bool[vertices];
+                if (EncontrarCaminhoAumentante(u, visitado))
                 {
-                    foreach (var v in grafo[u])
-                    {
-                        if (dist[parV[v]] == dist[u] + 1)
-                        {
-                            if (DFS(parV[v], parU, parV, grafo, dist))
-                            {
-                                parV[v] = u;
-                                parU[u] = v;
-                                return true;
-                            }
-                        }
-                    }
-                    dist[u] = int.MaxValue;
-                    return false;
+                    tamanhoEmparelhamentoMaximo++;
                 }
-                return true;
             }
 
-            // Algoritmo de Hopcroft-Karp para encontrar o emparelhamento máximo
-            int hopcroftKarp(Dictionary<int, int> parU, Dictionary<int, int> parV, Dictionary<int, List<int>> grafo)
-            {
-                int emparelhamento = 0;
-                Dictionary<int, int> dist = new Dictionary<int, int>();
-                while (BFS(parU, parV, grafo, dist))
-                {
-                    foreach (var u in U)
-                    {
-                        if (parU[u] == -1)
-                        {
-                            if (DFS(u, parU, parV, grafo, dist))
-                            {
-                                emparelhamento++;
-                            }
-                        }
-                    }
-                }
-                return emparelhamento;
-            }
-
-            int maxEmparelhamento = hopcroftKarp(parU, parV, grafo);
-            Console.WriteLine($"O tamanho do emparelhamento máximo é: {maxEmparelhamento}");
+            Console.WriteLine($"Tamanho do emparelhamento máximo é: {tamanhoEmparelhamentoMaximo}");
 
             Console.WriteLine("Emparelhamento máximo:");
-            foreach (var u in U)
+            for (int v = 0; v < vertices; v++)
             {
-                if (parU[u] != -1)
+                if (emparelhamento[v] != -1)
                 {
-                    Console.WriteLine($"{u} - {parU[u]}");
+                    Console.WriteLine($"{emparelhamento[v]} - {v}");
                 }
             }
         }
 
         public static void AlgoritmoGulosoDeColoracao(int vertices, List<(int, int, int)> listaArestas)
         {
+            Console.WriteLine("Executando Algoritmo Guloso de Coloração...");
             Dictionary<int, int> cores = new Dictionary<int, int>();
 
             for (int v = 0; v < vertices; v++)
@@ -1172,7 +1069,7 @@ namespace GrafosApp
             }
         }
 
-        static void AlgoritmoDeBellmanFord(int vertices, List<(int, int, int)> arestas, int origem)
+        static void AlgoritmoDeBellmanFord(int vertices, List<(int, int, int)> arestas, int verticeInicial)
         {
             Console.WriteLine("Executando Algoritmo de Bellman-Ford...");
 
@@ -1182,7 +1079,7 @@ namespace GrafosApp
             {
                 distancias[i] = int.MaxValue;
             }
-            distancias[origem] = 0;
+            distancias[verticeInicial] = 0;
 
             // Relaxamento das arestas
             for (int i = 0; i < vertices - 1; i++)
@@ -1227,7 +1124,7 @@ namespace GrafosApp
             }
         }
 
-         static void AlgoritmoDeFordFulkerson(int vertices, List<(int, int, int)> arestas)
+         static void AlgoritmoDeFordFulkerson(int vertices, List<(int, int, int)> arestas, int verticeInicial)
         {
             Console.WriteLine("Executando Algoritmo de Ford-Fulkerson...");
 
@@ -1242,22 +1139,21 @@ namespace GrafosApp
                 grafoResidual[origem, destino] = capacidade;
             }
 
-            int source = 0; // Vértice de origem
-            int sink = vertices - 1; // Vértice de destino
+            int verticeDestino = vertices - 1; // Vértice de destino
 
             // Algoritmo de Ford-Fulkerson usando DFS para encontrar caminhos aumentantes
             int fluxoMaximo = 0;
             int[] pai = new int[vertices];
-            while (DFS(source, sink, pai, grafoResidual, vertices))
+            while (DFS(verticeInicial, verticeDestino, pai, grafoResidual, vertices))
             {
                 int fluxoCaminho = int.MaxValue;
-                for (int v = sink; v != source; v = pai[v])
+                for (int v = verticeDestino; v != verticeInicial; v = pai[v])
                 {
                     int u = pai[v];
                     fluxoCaminho = Math.Min(fluxoCaminho, grafoResidual[u, v]);
                 }
 
-                for (int v = sink; v != source; v = pai[v])
+                for (int v = verticeDestino; v != verticeInicial; v = pai[v])
                 {
                     int u = pai[v];
                     grafoResidual[u, v] -= fluxoCaminho;
@@ -1270,13 +1166,13 @@ namespace GrafosApp
             Console.WriteLine($"Fluxo máximo: {fluxoMaximo}");
         }
 
-        static bool DFS(int source, int sink, int[] pai, int[,] grafoResidual, int vertices)
+        static bool DFS(int verticeInicial, int verticeDestino, int[] pai, int[,] grafoResidual, int vertices)
         {
             bool[] visitado = new bool[vertices];
             Stack<int> pilha = new Stack<int>();
-            pilha.Push(source);
-            visitado[source] = true;
-            pai[source] = -1;
+            pilha.Push(verticeInicial);
+            visitado[verticeInicial] = true;
+            pai[verticeInicial] = -1;
 
             while (pilha.Count > 0)
             {
@@ -1293,7 +1189,7 @@ namespace GrafosApp
                 }
             }
 
-            return visitado[sink];
+            return visitado[verticeDestino];
         }
 
     }
