@@ -388,55 +388,54 @@ namespace GrafosApp
                 grafo[i] = new List<int>();
             }
 
-            // Array para armazenar o grau de entrada de cada vértice
-            int[] grauDeEntrada = new int[vertices];
-
+            // Preenchimento do grafo
             foreach (var aresta in arestas)
             {
                 int origem = aresta.Item1;
                 int destino = aresta.Item2;
                 grafo[origem].Add(destino);
-                grauDeEntrada[destino]++;
             }
 
-            // Fila para armazenar os vértices com grau de entrada zero
-            Queue<int> fila = new Queue<int>();
+            // Marca os vértices visitados
+            bool[] visitado = new bool[vertices];
+            Stack<int> pilha = new Stack<int>();
 
-            for (int i = 0; i < vertices; i++)
+            // Função auxiliar para DFS
+            void DFS(int v)
             {
-                if (grauDeEntrada[i] == 0)
+                visitado[v] = true;
+
+                foreach (int adj in grafo[v])
                 {
-                    fila.Enqueue(i);
-                }
-            }
-
-            List<int> ordenacao = new List<int>();
-
-            while (fila.Count > 0)
-            {
-                int vertice = fila.Dequeue();
-                ordenacao.Add(vertice);
-
-                foreach (var adjacente in grafo[vertice])
-                {
-                    grauDeEntrada[adjacente]--;
-                    if (grauDeEntrada[adjacente] == 0)
+                    if (!visitado[adj])
                     {
-                        fila.Enqueue(adjacente);
+                        DFS(adj);
                     }
                 }
+
+                pilha.Push(v);
             }
 
-            if (ordenacao.Count != vertices)
+            // Executando DFS para todos os vértices
+            for (int i = 0; i < vertices; i++)
+            {
+                if (!visitado[i])
+                {
+                    DFS(i);
+                }
+            }
+
+            // Verificando se a ordenação topológica é possível
+            if (pilha.Count != vertices)
             {
                 Console.WriteLine("O grafo contém um ciclo e, portanto, não pode ser ordenado topologicamente.");
             }
             else
             {
                 Console.WriteLine("Ordenação Topológica:");
-                foreach (var vertice in ordenacao)
+                while (pilha.Count > 0)
                 {
-                    Console.Write($"{vertice} ");
+                    Console.Write($"{pilha.Pop()} ");
                 }
                 Console.WriteLine();
             }
