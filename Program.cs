@@ -6,42 +6,48 @@ namespace GrafosApp
 {
     public class Program
     {
-        public static string arquivo = "./Grafo.txt";
 
-        static void processarGrafo(string caminhoArquivo)
+        static void processarGrafo()
         {
-
+            int opcao = 0;
+            int cont = 0;
+            int vertices = 0;
+            int arestas = 0;
+            int verticeInicial = 0;
+            List<string> lista = new List<string>();
             try
             {
-                if (!File.Exists(caminhoArquivo))
-                {
-                    Console.WriteLine("Erro: O arquivo '{caminhoArquivo}' não foi encontrado.");
+                string entrada = Console.ReadLine();
+                while(entrada != null){
+                    if(cont == 0){
+                        opcao = int.Parse(entrada);
+                    }
+                    if(cont == 1){
+                        string[] split = entrada.Split(' ');
+                        vertices = int.Parse(split[0]);
+                        arestas = int.Parse(split[1]);
+                    }
+                    if(cont == 2){
+                        string[] split = entrada.Split(' ');
+                        verticeInicial = int.Parse(split[0]);
+                        lista.Add(entrada);
+                    }
+                    if(cont >= 3){
+                        lista.Add(entrada);
+                    }
+                    cont++;
+                    entrada = Console.ReadLine();
                 }
 
-                string[] grafo = File.ReadAllLines(caminhoArquivo);
-
-                if (grafo.Length == 0)
-                {
-                    Console.WriteLine("Erro: O arquivo '{caminhoArquivo}' está vazio.");
-                }
-
+                string[] grafo = lista.ToArray();
                 Console.WriteLine("Seu Grafo:");
                 for (int i = 0; i < grafo.Length; i++)
                 {
                     Console.WriteLine(grafo[i]);
                 }
 
-                int opcao = int.Parse(grafo[0]);
-                string infos = grafo[1];
-                string infos2 = grafo[2];
-                string[] split = infos.Split(' ');
-                string[] split2 = infos2.Split(' ');
-                int vertices = int.Parse(split[0]);
-                int arestas = int.Parse(split[1]);
-                int verticeInicial = int.Parse(split2[0]);
-
                 List<(int, int, int)> listaArestas = new List<(int, int, int)>();
-                for (int i = 2; i < grafo.Length; i++)
+                for (int i = 0; i < grafo.Length; i++)
                 {
                     string[] arestaInfo = grafo[i].Split(' ');
                     int origem = int.Parse(arestaInfo[0]);
@@ -114,7 +120,6 @@ namespace GrafosApp
 
         public static void Main(string[] args)
         {
-            Console.Clear();
             Console.WriteLine("--- Tabela de algoritmos ---");
             Console.WriteLine();
             Console.WriteLine("1. Busca em Profundidade (DFS)");
@@ -133,10 +138,7 @@ namespace GrafosApp
             Console.WriteLine("14. Algoritmo de Bellman-Ford");
             Console.WriteLine("15. Algoritmo de Ford-Fulkerson");
             Console.WriteLine();
-            Console.WriteLine("Pressione qualquer tecla para executar seu grafo.");
-            Console.ReadKey();
-            Console.Clear();
-            processarGrafo(arquivo);
+            processarGrafo();
         }
 
         static void BuscaEmProfundidade(int vertices, List<(int, int, int)> arestas, int verticeInicial)
